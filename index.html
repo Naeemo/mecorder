@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Mecorder</title>
+  <style>
+    video {
+        border: 1px solid lightgrey;
+        max-width: 300px;
+        max-height: 300px;
+    }
+  </style>
+</head>
+<body>
+<h2>input media sources</h2>
+<div class="sources" style="display: flex">
+  <div>
+    video
+    <video src="https://www.w3schools.com/html/mov_bbb.mp4" playsinline autoplay muted id="video" controls loop></video>
+  </div>
+  <div>
+    camera
+    <video playsinline muted id="camera"></video>
+  </div>
+</div>
+
+<hr>
+<h2>output preview</h2>
+<canvas id="output"></canvas>
+
+<script src="/src/index.ts" type="module"></script>
+<script type="module">
+  import Mecorder from "./src";
+
+  const mecorder = new Mecorder({ width: 600, height: 600 });
+  navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: false
+  }).then((stream) => {
+    console.debug("get camera", stream);
+    const target = document.querySelector("#camera");
+    target.srcObject = stream;
+    target.play()
+
+  });
+
+
+  mecorder.addSource({
+    source: document.querySelector("#video"),
+    destinationLayout: {
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 300,
+    }
+  })
+  mecorder.addSource({
+    source: document.querySelector("#camera"),
+    destinationLayout: {
+      x: 300,
+      y: 0,
+      width: 300,
+      height: 300,
+    }
+  })
+
+  mecorder.output(document.querySelector("#output"));
+</script>
+</body>
+</html>
