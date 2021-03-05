@@ -4,10 +4,12 @@
   "version": "0.0.0",
   "license": "MIT",
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "main": "./dist/mecorder.umd.js",
   "module": "./dist/mecorder.es.js",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
       "import": "./dist/mecorder.es.js",
