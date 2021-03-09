@@ -6,9 +6,10 @@
     <title>Mecorder</title>
     <style>
       video {
+        display: block;
         border: 1px solid lightgrey;
-        max-width: 300px;
-        max-height: 300px;
+        max-width: 800px;
+        max-height: 800px;
       }
     </style>
   </head>
@@ -19,7 +20,6 @@
         Mp4 video
         <video
           src="/example/mov_bbb.mp4"
-          playsinline
           autoplay
           muted
           id="video"
@@ -35,7 +35,8 @@
 
     <hr />
     <h2>output preview</h2>
-    <video id="output" playsinline controls></video>
+    <canvas id="output"></canvas>
+    <video id="outputVideo"></video>
 
     <script type="module" src="/example/index.ts"></script>
   </body>

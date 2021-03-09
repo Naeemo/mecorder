@@ -1,72 +1,56 @@
-interface ILayout {
-  width: number
-  height: number
-  background?: string | CanvasImageSource
-}
+import { IVideoMergerOptions, ISourceConfig, VideoMerger } from './videoMerger'
 
-interface ISourceConfig {
-  source: CanvasImageSource
-  destinationLayout: {
-    x: number
-    y: number
-    width: number
-    height: number
-  }
-  sourceLayout?: {
-    x: number
-    y: number
-    width: number
-    height: number
-  }
-}
-
-type MecorderOptions = ILayout
+type MecorderOptions = IVideoMergerOptions & MediaRecorderOptions
 
 export default class Mecorder {
-  private readonly sourceConfigs: ISourceConfig[] = []
+  private readonly videoMerger: VideoMerger
 
-  private readonly outputCanvas: HTMLCanvasElement = document.createElement(
-    'canvas'
-  )
-
-  private readonly outputStream: MediaStream = new MediaStream(
-    this.outputCanvas.captureStream().getVideoTracks()
-  )
-
-  private readonly recorder: MediaRecorder
+  private recorder: MediaRecorder | null = null
 
   private readonly chunks: Blob[] = []
 
-  constructor({
-    width,
-    height,
-    background = '#ffffff',
+  constructor({ width, height, background = '#ffffff' }: MecorderOptions) {
+    this.videoMerger = new VideoMerger({ width, height, background })
+    console.log(this.videoMerger.getVideoTracks())
+  }
+
+  /**
+   * add a recording source
+   * @param sourceConfig
+   */
+  public addSource(sourceConfig: ISourceConfig) {
+    console.debug('Mecorder add source', sourceConfig)
+    this.videoMerger.addSource(sourceConfig)
+
+    // add audio tracks from video element
+    if (sourceConfig.source instanceof HTMLVideoElement) {
+      const audioTracks = sourceConfig.source.captureStream().getAudioTracks()
+      for (const at of audioTracks) {
+        this.outputStream.addTrack(at)
+      }
+    }
+
+    console.debug('Mecorder added source', this.outputStream)
+  }
+
+  public start({
     mimeType = 'video/webm',
     audioBitsPerSecond,
     videoBitsPerSecond,
     bitsPerSecond,
     audioBitrateMode,
-  }: MecorderOptions & MediaRecorderOptions) {
+  }: MediaRecorderOptions = {}): void {
+    console.debug('Mecorder start')
+    if (this.recorder?.state === 'recording') {
+      console.warn('Mecorder already recording')
+      return
+    }
+
     if (!MediaRecorder.isTypeSupported(mimeType)) {
-      throw new Error(`${mimeType} not supported`)
+      throw new Error(`Mecorder ${mimeType} not supported`)
     }
 
-    // init output canvas
-    const ctx = this.outputCanvas.getContext('2d')
-    this.outputCanvas.width = width
-    this.outputCanvas.height = height
-
-    // draw background
-    if (typeof background === 'string') {
-      ctx.fillStyle = background
-      ctx.fillRect(0, 0, width, height)
-    } else {
-      ctx.drawImage(background, 0, 0, width, height)
-    }
-
-    // start draw videos
-    this.mergeVideo(ctx)
-
+    this.outputStream = new MediaStream(this.videoMerger.getVideoTracks())
     this.recorder = new MediaRecorder(this.outputStream, {
       mimeType,
       audioBitsPerSecond,
@@ -82,37 +66,9 @@ export default class Mecorder {
       )
       this.chunks.push(blobEvent.data)
     }
-  }
-
-  /**
-   * add a recording source
-   * @param sourceConfig
-   */
-  public addSource(sourceConfig: ISourceConfig) {
-    console.debug('Mecorder add source', sourceConfig)
-    const index = this.sourceConfigs.findIndex((sc) => sc === sourceConfig)
-
-    if (index === -1) {
-      this.sourceConfigs.push(sourceConfig)
-    }
-
-    // add audio tracks from video element
-    if (sourceConfig.source instanceof HTMLVideoElement) {
-      const audioTracks = sourceConfig.source.captureStream().getAudioTracks()
-      for (const at of audioTracks) {
-        this.outputStream.addTrack(at)
-      }
-    }
-
-    console.debug('Mecorder added source', this.outputStream)
-  }
-
-  public start(): void {
-    console.debug('Mecorder start')
-    if (this.recorder.state === 'recording') {
-      console.warn('Mecorder already recording')
-      return
-    }
+    setInterval(() => {
+      this.recorder.requestData()
+    }, 2000)
 
     if (this.recorder.state === 'paused') {
       console.debug('Mecorder paused, resume now')
@@ -123,8 +79,12 @@ export default class Mecorder {
     this.recorder.start()
   }
 
-  public paused(): void {
+  public pause(): void {
     this.recorder.pause()
+  }
+
+  public resume(): void {
+    this.recorder.resume()
   }
 
   public async stop(): Promise<Blob[]> {
@@ -135,44 +95,11 @@ export default class Mecorder {
 
     this.recorder.onstop = () => {
       console.debug('Mecorder record stop', this.chunks)
+      // todo save chunks to indexedDB
       resolver(this.chunks)
     }
 
     this.recorder.stop()
     return result
-  }
-
-  private mergeVideo(ctx: CanvasRenderingContext2D) {
-    requestAnimationFrame(() => {
-      this.mergeVideoFrame(ctx)
-      return this.mergeVideo(ctx)
-    })
-  }
-
-  private mergeVideoFrame(ctx: CanvasRenderingContext2D): void {
-    for (const sc of this.sourceConfigs) {
-      const { source, sourceLayout, destinationLayout } = sc
-      if (sourceLayout) {
-        ctx.drawImage(
-          source,
-          sourceLayout.x,
-          sourceLayout.y,
-          sourceLayout.width,
-          sourceLayout.height,
-          destinationLayout.x,
-          destinationLayout.y,
-          destinationLayout.width,
-          destinationLayout.height
-        )
-      } else {
-        ctx.drawImage(
-          source,
-          destinationLayout.x,
-          destinationLayout.y,
-          destinationLayout.width,
-          destinationLayout.height
-        )
-      }
-    }
   }
 }
