@@ -48,16 +48,13 @@ export class VideoMerger {
 
     const ctx = this.outputCanvas.getContext('2d')
 
-    // draw background
+    // prepare background
     if (typeof background === 'string') {
       ctx.fillStyle = background
       ctx.fillRect(0, 0, width, height)
     } else {
       ctx.drawImage(background, 0, 0, width, height)
     }
-
-    // start draw videos
-    this.mergeVideo(ctx)
   }
 
   private static fitDestLayout(sc: ISourceConfig): ILayout {
@@ -119,18 +116,18 @@ export class VideoMerger {
     this.drawSources.push(sc)
   }
 
-  public getVideoTracks() {
-    return this.outputCanvas.captureStream().getVideoTracks()
+  public getFrame(): ImageData {
+    const ctx = this.outputCanvas.getContext('2d')
+    this.mergeSourceFrames(ctx)
+    return ctx.getImageData(
+      0,
+      0,
+      this.outputCanvas.width,
+      this.outputCanvas.height
+    )
   }
 
-  private mergeVideo(ctx: CanvasRenderingContext2D) {
-    requestAnimationFrame(() => {
-      this.mergeVideoFrame(ctx)
-      return this.mergeVideo(ctx)
-    })
-  }
-
-  private mergeVideoFrame(ctx: CanvasRenderingContext2D): void {
+  private mergeSourceFrames(ctx: CanvasRenderingContext2D): void {
     for (const ds of this.drawSources) {
       const { source, sourceLayout } = ds
       const destLayout = VideoMerger.fitDestLayout(ds)
