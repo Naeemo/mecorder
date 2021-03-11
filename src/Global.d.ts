@@ -3,6 +3,13 @@ declare module '*?raw' {
   export default src
 }
 
+interface HTMLMediaElement {
+  /**
+   * https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/captureStream
+   */
+  captureStream(): MediaStream
+}
+
 interface AudioWorkletProcessor {
   readonly port: MessagePort
   process(

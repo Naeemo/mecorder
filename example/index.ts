@@ -1,8 +1,17 @@
 import Mecorder from '../src/index'
 
+const totalWidth = 1280
+const totalHeight = 720
+
 const mecorder = new Mecorder({
-  width: 1920,
-  height: 1080,
+  width: totalWidth,
+  height: totalHeight,
+  fps: 10,
+  onFrame(imageData, pcms) {
+    const output = document.querySelector<HTMLCanvasElement>('#output')
+    const ctx = output.getContext('2d')
+    ctx.putImageData(imageData, 0, 0)
+  },
 })
 navigator.mediaDevices
   .getUserMedia({
@@ -21,26 +30,24 @@ mecorder.addSource({
   destLayout: {
     x: 0,
     y: 0,
-    width: 960,
-    height: 1080,
+    width: totalWidth / 2,
+    height: totalHeight,
   },
 })
 mecorder.addSource({
   source: document.querySelector<HTMLVideoElement>('#camera'),
   destLayout: {
-    x: 960,
+    x: totalWidth / 2,
     y: 0,
-    width: 960,
-    height: 1080,
+    width: totalWidth / 2,
+    height: totalHeight,
   },
 })
 
-setTimeout(() => {
+document.querySelector('#startBtn').addEventListener('click', () => {
   mecorder.start()
-  // mecorder.stop().then((chunks) => {
-  //   const blob = new Blob(chunks, { type: 'video/mp4' })
-  //   const url = window.URL.createObjectURL(blob)
-  //   const output = document.querySelector<HTMLVideoElement>('#outputVideo')
-  //   output.src = url
-  // })
-}, 10 * 1000)
+})
+
+document.querySelector('#stopBtn').addEventListener('click', () => {
+  mecorder.destroy()
+})

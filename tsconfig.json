@@ -1,4 +1,7 @@
 {
+  "compilerOptions": {
+    "lib": ["ESNext", "dom"]
+  },
   "include": [
     "src"
   ],
