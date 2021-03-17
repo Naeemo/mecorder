@@ -21,3 +21,7 @@ yarn add mecorder
 ## License
 
 [MIT](./LICENSE)
+
+___
+
+Supported by [JetBrains open source program](https://www.jetbrains.com/community/opensource/#support?from=mecorder).
