@@ -10,8 +10,6 @@ class WhiteNoiseProcessor extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
-    console.debug(inputs, outputs, parameters)
-
     if (this.stop) {
       return true
     }

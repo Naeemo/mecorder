@@ -6,37 +6,36 @@ export class AudioReader {
   })
   private static workletUrl = URL.createObjectURL(AudioReader.workletBlob)
 
-  private state: 'inactive' | 'reading' = 'inactive'
-  private streamSources: {
-    source: MediaStream
-    // TODO volume: number
-  }[] = []
+  private state: 'inactive' | 'processing' = 'inactive'
+  private streamSources: MediaStream[] = []
   private pcmCache: Uint8Array[] = []
+  private audioContext: AudioContext | null = null
   private worker: AudioWorkletNode
 
-  public addSource(s: MediaStream): void {
-    if (this.streamSources.every(({ source }) => s !== source)) {
-      this.streamSources.push({
-        source: s,
-      })
+  public addSource(source: MediaStream): void {
+    if (this.streamSources.every((s) => s !== source)) {
+      this.streamSources.push(source)
+
+      if (this.state === 'processing') {
+        this.updateSource(source)
+      }
     }
   }
 
   public async start(): Promise<void> {
     const audioTracks = this.streamSources
-      .map((ss) => ss.source.getAudioTracks())
+      .map((source) => source.getAudioTracks())
       .flat()
     const stream = new MediaStream(audioTracks)
-    const audioContext = new AudioContext()
+    this.audioContext = new AudioContext()
 
     // init worklet
-    await audioContext.audioWorklet.addModule(AudioReader.workletUrl)
-    this.worker = new AudioWorkletNode(audioContext, 'processor')
+    await this.audioContext.audioWorklet.addModule(AudioReader.workletUrl)
+    this.worker = new AudioWorkletNode(this.audioContext, 'processor')
     this.worker.port.onmessage = (event: MessageEvent<ArrayBuffer[]>) => {
-      console.debug(event.data)
       const pcmBuffers = event.data
       this.pcmCache = pcmBuffers.map((pcmBuf, index) => {
-        const oldCache = this.pcmCache[index]
+        const oldCache = this.pcmCache[index] || new Uint8Array(0)
         const bytes = new Uint8Array(pcmBuf)
         const newCache = new Uint8Array(oldCache.length + bytes.length)
         newCache.set(oldCache)
@@ -46,21 +45,28 @@ export class AudioReader {
     }
 
     // build a new stream
-    const audioInput = audioContext.createMediaStreamSource(stream)
+    const audioInput = this.audioContext.createMediaStreamSource(stream)
     // connect source with processor node
     audioInput.connect(this.worker)
   }
 
   public getPcms(): Uint8Array[] {
-    return this.pcmCache
+    const pcms = this.pcmCache
+    this.pcmCache = []
+    return pcms
   }
 
   public destroy(): void {
-    URL.revokeObjectURL(AudioReader.workletUrl)
     this.worker.port.postMessage('stop')
     this.worker.disconnect()
+    this.audioContext.close()
     this.streamSources = []
-    delete AudioReader.workletUrl
-    delete AudioReader.workletBlob
+  }
+
+  private updateSource(source: MediaStream): void {
+    const audioTracks = source.getAudioTracks()
+    const stream = new MediaStream(audioTracks)
+    const audioInput = this.audioContext.createMediaStreamSource(stream)
+    audioInput.connect(this.worker)
   }
 }

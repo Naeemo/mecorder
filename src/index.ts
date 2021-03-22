@@ -59,9 +59,9 @@ export default class Mecorder {
     //  output raw data by calling onFrame
     console.debug('Mecorder start')
     this.audioReader.start()
-    this.timer = window.setInterval(() => {
+    this.timer = window.setInterval(async () => {
       const imageData = this.videoMerger.getFrame()
-      const pcms = this.audioReader.getPcms()
+      const pcms = await this.audioReader.getPcms()
       this.onFrame(imageData, pcms)
     }, Math.floor(1000 / this.fps))
   }
