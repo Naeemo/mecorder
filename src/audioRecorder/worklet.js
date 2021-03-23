@@ -3,8 +3,15 @@ class WhiteNoiseProcessor extends AudioWorkletProcessor {
     super(props)
     this.stop = false
     this.port.onmessage = (event) => {
-      if (event.data === 'stop') {
-        this.stop = true
+      switch (event.data === 'stop') {
+        case 'stop':
+        case 'pause':
+          this.stop = true
+          break
+
+        case 'resume':
+          this.stop = false
+          break
       }
     }
   }
