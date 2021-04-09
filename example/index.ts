@@ -1,4 +1,5 @@
-import Mecorder from '../src/util'
+import Mecorder from '../src'
+import { log } from '../src/util/log'
 
 const totalWidth = 1280
 const totalHeight = 720
@@ -19,7 +20,7 @@ navigator.mediaDevices
     audio: true,
   })
   .then((stream) => {
-    console.debug('get camera', stream)
+    log('debug', 'get camera', stream)
     const target = document.querySelector<HTMLVideoElement>('#camera')
     target.srcObject = stream
     target.play()

@@ -2,8 +2,9 @@ import {
   ISourceConfig,
   IVideoMergerOptions,
   VideoMerger,
-} from '../videoMerger/videoMerger'
-import { AudioRecorder } from '../audioRecorder/audioRecorder'
+} from './videoMerger/videoMerger'
+import { AudioRecorder } from './audioRecorder/audioRecorder'
+import { log } from './util/log'
 
 interface IFrameHandler {
   (video: ImageData, pcms: Uint8Array[]): unknown
@@ -51,10 +52,10 @@ export default class Mecorder {
    * @param sourceConfig
    */
   public addSource(sourceConfig: ISourceConfig) {
-    console.debug('Mecorder: add source', sourceConfig)
+    log('debug', 'Mecorder: add source', sourceConfig)
 
     if (this.state === 'destroyed') {
-      console.error('Mecorder: add source fail, already destroyed')
+      log('error', 'Mecorder: add source fail, already destroyed')
       return
     }
 
@@ -70,10 +71,10 @@ export default class Mecorder {
    * output raw data by calling onFrame
    */
   public async start(): Promise<void> {
-    console.debug('Mecorder: start')
+    log('debug', 'Mecorder: start')
 
     if (this.state === 'destroyed') {
-      console.error('Mecorder: start fail, already destroyed')
+      log('error', 'Mecorder: start fail, already destroyed')
       return
     }
 
@@ -86,15 +87,15 @@ export default class Mecorder {
    * no need to pause videoMerger, because it doesn't do anything till getFrame() called
    */
   public pause(): void {
-    console.debug('Mecorder: pause')
+    log('debug', 'Mecorder: pause')
 
     if (this.state === 'paused') {
-      console.warn('Mecorder: pause fail, already paused')
+      log('warn', 'Mecorder: pause fail, already paused')
       return
     }
 
     if (this.state === 'destroyed') {
-      console.error('Mecorder: pause fail, already destroyed')
+      log('error', 'Mecorder: pause fail, already destroyed')
       return
     }
 
@@ -111,15 +112,15 @@ export default class Mecorder {
    * resume recording
    */
   public resume(): void {
-    console.debug('Mecorder: resume')
+    log('debug', 'Mecorder: resume')
 
     if (this.state === 'inactive') {
-      console.error('Mecorder: resume fail, not started yet')
+      log('error', 'Mecorder: resume fail, not started yet')
       return
     }
 
     if (this.state === 'destroyed') {
-      console.error('Mecorder: resume fail, already destroyed')
+      log('error', 'Mecorder: resume fail, already destroyed')
       return
     }
 
@@ -134,10 +135,10 @@ export default class Mecorder {
    * Destroy a mecorder
    */
   public destroy(): void {
-    console.debug('Mecorder: destroy')
+    log('debug', 'Mecorder: destroy')
 
     if (this.state === 'destroyed') {
-      console.warn('Mecorder: already destroyed')
+      log('warn', 'Mecorder: already destroyed')
       return
     }
 
@@ -164,11 +165,11 @@ export default class Mecorder {
    * @private
    */
   private startRecording(): void {
-    console.debug('Mecorder: startRecording')
+    log('debug', 'Mecorder: startRecording')
     this.state = 'recording'
 
     if (this.timer !== null) {
-      console.warn('Mecorder: recording already started')
+      log('warn', 'Mecorder: recording already started')
       window.clearInterval(this.timer)
     }
 

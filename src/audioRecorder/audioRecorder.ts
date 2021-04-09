@@ -1,4 +1,5 @@
 import processorWorklet from './worklet?raw'
+import { log } from '../util/log'
 
 export class AudioRecorder {
   private static workletBlob = new Blob([processorWorklet], {
@@ -20,16 +21,15 @@ export class AudioRecorder {
     const audioTracks = source.getAudioTracks()
 
     if (audioTracks.length === 0) {
-      console.warn(
+      log(
+        'warn',
         `audio recorder: new media stream doesn\'t contain any audio tracks`
       )
       return audioTracks.length
     }
 
     if (this.streamSources.some((s) => s === source)) {
-      console.warn(
-        `audio recorder: new media stream is already being recorded.`
-      )
+      log('warn', `audio recorder: new media stream is already being recorded.`)
       return 0
     }
 
@@ -78,12 +78,12 @@ export class AudioRecorder {
    */
   public pause(): void {
     if (this.state === 'inactive') {
-      console.warn('audio recorder: pause fail, not started yet')
+      log('warn', 'audio recorder: pause fail, not started yet')
       return
     }
 
     if (this.state === 'paused') {
-      console.warn('audio recorder: already paused')
+      log('warn', 'audio recorder: already paused')
       this.worker.port.postMessage('pause')
       return
     }
@@ -97,12 +97,12 @@ export class AudioRecorder {
    */
   public resume(): void {
     if (this.state === 'inactive') {
-      console.error('audio recorder: resume fail, not started yet')
+      log('error', 'audio recorder: resume fail, not started yet')
       return
     }
 
     if (this.state === 'processing') {
-      console.warn('audio recorder: already processing, resume is unnecessary')
+      log('warn', 'audio recorder: already processing, resume is unnecessary')
       this.worker.port.postMessage('resume')
       return
     }
@@ -137,7 +137,8 @@ export class AudioRecorder {
    */
   private addNewTracks(audioTracks: MediaStreamTrack[]): void {
     if (audioTracks.length === 0) {
-      console.warn(
+      log(
+        'warn',
         `audio recorder add new tracks fail, no tracks available:`,
         audioTracks
       )
