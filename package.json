@@ -21,6 +21,7 @@
   ],
   "files": [
     "dist",
+    "example",
     "src"
   ],
   "main": "./dist/mecorder.umd.js",
