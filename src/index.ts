@@ -73,8 +73,8 @@ export default class Mecorder {
   public async start(): Promise<void> {
     log('debug', 'Mecorder: start')
 
-    if (this.state === 'destroyed') {
-      log('error', 'Mecorder: start fail, already destroyed')
+    if (this.state !== 'inactive') {
+      log('warn', 'Mecorder: start fail, already started')
       return
     }
 
@@ -103,6 +103,7 @@ export default class Mecorder {
 
     // pause frame event
     window.clearInterval(this.timer)
+    this.timer = null
 
     // pause audio recording
     this.audioRecorder.pause()
@@ -134,8 +135,8 @@ export default class Mecorder {
   /**
    * Destroy a mecorder
    */
-  public destroy(): void {
-    log('debug', 'Mecorder: destroy')
+  public stop(): void {
+    log('debug', 'Mecorder: stop')
 
     if (this.state === 'destroyed') {
       log('warn', 'Mecorder: already destroyed')
@@ -145,10 +146,11 @@ export default class Mecorder {
     // stop recording timer
     if (this.timer !== null) {
       window.clearInterval(this.timer)
+      this.timer = null
     }
 
-    // destroy audio recorder
-    this.audioRecorder.destroy()
+    // stop audio recorder
+    this.audioRecorder.stop()
 
     // drop all instance keys
     for (const key in this) {

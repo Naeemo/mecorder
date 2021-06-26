@@ -37,18 +37,14 @@ export interface ISourceConfig {
 }
 
 export class VideoMerger {
-  private readonly outputCanvas: OffscreenCanvas | HTMLCanvasElement
+  private readonly outputCanvas: HTMLCanvasElement
   private readonly drawSources: ISourceConfig[] = []
 
   constructor({ width, height, background }: Required<IVideoMergerOptions>) {
     // init output canvas
-    if (OffscreenCanvas) {
-      this.outputCanvas = new OffscreenCanvas(width, height)
-    } else {
-      this.outputCanvas = document.createElement<'canvas'>('canvas')
-      this.outputCanvas.width = width
-      this.outputCanvas.height = height
-    }
+    this.outputCanvas = document.createElement<'canvas'>('canvas')
+    this.outputCanvas.width = width
+    this.outputCanvas.height = height
 
     const ctx = this.outputCanvas.getContext('2d')
 
@@ -135,9 +131,7 @@ export class VideoMerger {
     )
   }
 
-  private mergeSourceFrames(
-    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
-  ): void {
+  private mergeSourceFrames(ctx: CanvasRenderingContext2D): void {
     for (const ds of this.drawSources) {
       const { source, sourceLayout } = ds
       const destLayout = VideoMerger.fitDestLayout(ds)

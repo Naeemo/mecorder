@@ -1,19 +1,24 @@
 import Mecorder from '../src'
 import { log } from '../src/util/log'
 
-const totalWidth = 1280
-const totalHeight = 720
+const totalWidth = 800
+const totalHeight = 500
+const output = document.querySelector<HTMLCanvasElement>('#output')
+const ctx = output.getContext('2d')
+
+output.height = totalHeight
+output.width = totalWidth
 
 const mecorder = new Mecorder({
   width: totalWidth,
   height: totalHeight,
+  background: 'red',
   fps: 10,
   onFrame(imageData, pcms) {
-    const output = document.querySelector<HTMLCanvasElement>('#output')
-    const ctx = output.getContext('2d')
     ctx.putImageData(imageData, 0, 0)
   },
 })
+
 navigator.mediaDevices
   .getUserMedia({
     video: true,
@@ -50,6 +55,14 @@ document.querySelector('#startBtn').addEventListener('click', () => {
   mecorder.start()
 })
 
+document.querySelector('#pauseBtn').addEventListener('click', () => {
+  mecorder.pause()
+})
+
+document.querySelector('#resumeBtn').addEventListener('click', () => {
+  mecorder.resume()
+})
+
 document.querySelector('#stopBtn').addEventListener('click', () => {
-  mecorder.destroy()
+  mecorder.stop()
 })

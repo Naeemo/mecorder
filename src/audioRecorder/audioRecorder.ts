@@ -46,6 +46,11 @@ export class AudioRecorder {
    * start audio recording
    */
   public async start(): Promise<void> {
+    if (this.state !== 'inactive') {
+      log('warn', 'audio recorder: start fail, already started')
+      return
+    }
+    this.state = 'processing'
     const audioTracks = this.streamSources
       .map((source) => source.getAudioTracks())
       .flat()
@@ -123,7 +128,7 @@ export class AudioRecorder {
   /**
    * destroy audio recorder instance
    */
-  public destroy(): void {
+  public stop(): void {
     this.worker.port.postMessage('stop')
     this.worker.disconnect()
     this.audioContext.close()
