@@ -3,6 +3,22 @@
   "author": "naeemo<naeemo@qq.com>",
   "version": "0.0.0",
   "license": "MIT",
+  "description": "Web media recorder",
+  "homepage": "https://github.com/Naeemo/mecorder",
+  "bugs": {
+    "url": "https://github.com/Naeemo/mecorder/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Naeemo/mecorder.git"
+  },
+  "keywords": [
+    "Web media recorder",
+    "mediastream merge",
+    "web video recording",
+    "web audio recording",
+    "mediastream recorder"
+  ],
   "files": [
     "dist",
     "src"
