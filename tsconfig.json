@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "types": ["vite/client"],
     "lib": ["ESNext", "dom"]
   },
   "include": [

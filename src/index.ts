@@ -102,7 +102,7 @@ export default class Mecorder {
     this.state = 'paused'
 
     // pause frame event
-    window.clearInterval(this.timer)
+    if (this.timer) window.clearInterval(this.timer)
     this.timer = null
 
     // pause audio recording
@@ -177,7 +177,7 @@ export default class Mecorder {
 
     this.timer = window.setInterval(async () => {
       const imageData = this.videoMerger.getFrame()
-      const pcms = await this.audioRecorder.getPcms()
+      const pcms = this.audioRecorder.getPcms()
       this.onFrame(imageData, pcms)
     }, Math.floor(1000 / this.fps))
   }
