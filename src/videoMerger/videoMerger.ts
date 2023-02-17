@@ -38,9 +38,13 @@ export interface ISourceConfig {
 
 export class VideoMerger {
   private readonly outputCanvas: HTMLCanvasElement
+  private readonly stream: MediaStream
   private readonly drawSources: ISourceConfig[] = []
 
-  constructor({ width, height, background }: Required<IVideoMergerOptions>) {
+  constructor(
+    outputStream: MediaStream,
+    { width, height, background }: Required<IVideoMergerOptions>
+  ) {
     // init output canvas
     this.outputCanvas = document.createElement<'canvas'>('canvas')
     this.outputCanvas.width = width
@@ -58,23 +62,28 @@ export class VideoMerger {
     } else {
       ctx.drawImage(background, 0, 0, width, height)
     }
+    this.stream = this.outputCanvas.captureStream()
+
+    this.stream.getVideoTracks().forEach((vt) => {
+      outputStream.addTrack(vt)
+    })
   }
 
   private static fitDestLayout(sc: ISourceConfig): ILayout {
     const { source, fit, sourceLayout, destLayout } = sc
     const sourceWidth =
       sourceLayout?.width ||
-        // @ts-ignore
+      // @ts-ignore
       source['naturalWidth'] ||
-        // @ts-ignore
+      // @ts-ignore
       source['videoWidth'] ||
       source.width ||
       destLayout.width
     const sourceHeight =
       sourceLayout?.height ||
-        // @ts-ignore
+      // @ts-ignore
       source['naturalHeight'] ||
-        // @ts-ignore
+      // @ts-ignore
       source['videoHeight'] ||
       source.height ||
       destLayout.height
@@ -123,19 +132,13 @@ export class VideoMerger {
     this.drawSources.push(sc)
   }
 
-  public getFrame(): ImageData {
+  public getFrame(): void {
     const ctx = this.outputCanvas.getContext('2d')
     if (ctx === null) {
       throw new Error('video merger: fail to get canvas context')
     }
 
     this.mergeSourceFrames(ctx)
-    return ctx.getImageData(
-      0,
-      0,
-      this.outputCanvas.width,
-      this.outputCanvas.height
-    )
   }
 
   private mergeSourceFrames(ctx: CanvasRenderingContext2D): void {

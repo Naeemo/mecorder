@@ -3,48 +3,35 @@ import {
   IVideoMergerOptions,
   VideoMerger,
 } from './videoMerger/videoMerger'
-import { AudioRecorder } from './audioRecorder/audioRecorder'
 import { log } from './util/log'
 
-interface IFrameHandler {
-  (video: ImageData, pcms: Uint8Array[]): unknown
-}
-
-interface IMecorderOption {
+type MecorderOptions = {
   /**
-   * collect raw data by this frequency
+   * merged video FPS
    */
-  fps: number
+  fps?: number
+} & IVideoMergerOptions &
+  MediaRecorderOptions
 
-  /**
-   * raw data event
-   * @param video
-   * @param audio
-   */
-  onFrame: IFrameHandler
-}
-
-type MecorderOptions = IVideoMergerOptions & IMecorderOption
-
-export default class Mecorder {
+export default class Mecorder extends MediaRecorder {
   private readonly videoMerger: VideoMerger
-  private readonly audioRecorder: AudioRecorder
   private readonly fps: number
-  private readonly onFrame: IFrameHandler
-  private state: 'inactive' | 'recording' | 'paused' | 'destroyed' = 'inactive'
   private timer: number | null = null
 
   constructor({
+    fps = 30,
     width,
     height,
     background = '#ffffff',
-    fps,
-    onFrame,
+    ...options
   }: MecorderOptions) {
-    this.videoMerger = new VideoMerger({ width, height, background })
-    this.audioRecorder = new AudioRecorder()
+    const stream = new MediaStream()
+    const videoMerger = new VideoMerger(stream, { width, height, background })
+
+    super(stream, options)
+
     this.fps = fps
-    this.onFrame = onFrame
+    this.videoMerger = videoMerger
   }
 
   /**
@@ -54,15 +41,15 @@ export default class Mecorder {
   public addSource(sourceConfig: ISourceConfig) {
     log('debug', 'Mecorder: add source', sourceConfig)
 
-    if (this.state === 'destroyed') {
-      log('error', 'Mecorder: add source fail, already destroyed')
-      return
-    }
-
     this.videoMerger.addSource(sourceConfig)
 
     if (sourceConfig.source instanceof HTMLVideoElement) {
-      this.audioRecorder.addSource(sourceConfig.source.captureStream())
+      sourceConfig.source
+        .captureStream()
+        .getAudioTracks()
+        .forEach((at) => {
+          this.stream.addTrack(at)
+        })
     }
   }
 
@@ -78,8 +65,8 @@ export default class Mecorder {
       return
     }
 
-    await this.audioRecorder.start()
     this.startRecording()
+    super.start()
   }
 
   /**
@@ -94,19 +81,10 @@ export default class Mecorder {
       return
     }
 
-    if (this.state === 'destroyed') {
-      log('error', 'Mecorder: pause fail, already destroyed')
-      return
-    }
-
-    this.state = 'paused'
-
     // pause frame event
     if (this.timer) window.clearInterval(this.timer)
     this.timer = null
-
-    // pause audio recording
-    this.audioRecorder.pause()
+    super.pause()
   }
 
   /**
@@ -120,28 +98,17 @@ export default class Mecorder {
       return
     }
 
-    if (this.state === 'destroyed') {
-      log('error', 'Mecorder: resume fail, already destroyed')
-      return
-    }
-
-    // resume audio recording
-    this.audioRecorder.resume()
-
     // restart frame event
     this.startRecording()
+    super.resume()
   }
 
   /**
    * Destroy a mecorder
+   * todo: check if media recorder still startable after stop
    */
   public stop(): void {
     log('debug', 'Mecorder: stop')
-
-    if (this.state === 'destroyed') {
-      log('warn', 'Mecorder: already destroyed')
-      return
-    }
 
     // stop recording timer
     if (this.timer !== null) {
@@ -149,17 +116,7 @@ export default class Mecorder {
       this.timer = null
     }
 
-    // stop audio recorder
-    this.audioRecorder.stop()
-
-    // drop all instance keys
-    for (const key in this) {
-      if (Object.prototype.hasOwnProperty.call(this, key)) {
-        delete this[key]
-      }
-    }
-
-    this.state = 'destroyed'
+    super.stop()
   }
 
   /**
@@ -168,7 +125,6 @@ export default class Mecorder {
    */
   private startRecording(): void {
     log('debug', 'Mecorder: startRecording')
-    this.state = 'recording'
 
     if (this.timer !== null) {
       log('warn', 'Mecorder: recording already started')
@@ -176,9 +132,7 @@ export default class Mecorder {
     }
 
     this.timer = window.setInterval(async () => {
-      const imageData = this.videoMerger.getFrame()
-      const pcms = this.audioRecorder.getPcms()
-      this.onFrame(imageData, pcms)
+      this.videoMerger.getFrame()
     }, Math.floor(1000 / this.fps))
   }
 }

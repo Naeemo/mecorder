@@ -5,6 +5,7 @@
     "strictNullChecks": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
+    "moduleResolution": "node",
     "types": ["vite/client"],
     "target": "ESNext",
     "lib": ["ESNext", "dom"]
