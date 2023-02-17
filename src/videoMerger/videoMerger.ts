@@ -47,6 +47,9 @@ export class VideoMerger {
     this.outputCanvas.height = height
 
     const ctx = this.outputCanvas.getContext('2d')
+    if (ctx === null) {
+      throw new Error('video merger: fail to get canvas context')
+    }
 
     // prepare background
     if (typeof background === 'string') {
@@ -61,13 +64,17 @@ export class VideoMerger {
     const { source, fit, sourceLayout, destLayout } = sc
     const sourceWidth =
       sourceLayout?.width ||
+        // @ts-ignore
       source['naturalWidth'] ||
+        // @ts-ignore
       source['videoWidth'] ||
       source.width ||
       destLayout.width
     const sourceHeight =
       sourceLayout?.height ||
+        // @ts-ignore
       source['naturalHeight'] ||
+        // @ts-ignore
       source['videoHeight'] ||
       source.height ||
       destLayout.height

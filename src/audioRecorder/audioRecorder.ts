@@ -11,7 +11,7 @@ export class AudioRecorder {
   private streamSources: MediaStream[] = []
   private pcmCache: Uint8Array[] = []
   private audioContext: AudioContext | null = null
-  private worker: AudioWorkletNode
+  private worker?: AudioWorkletNode
 
   /**
    * Add a new media stream to audio recorder, return the number of audio tracks added
@@ -89,12 +89,12 @@ export class AudioRecorder {
 
     if (this.state === 'paused') {
       log('warn', 'audio recorder: already paused')
-      this.worker.port.postMessage('pause')
+      this.worker?.port.postMessage('pause')
       return
     }
 
     this.state = 'paused'
-    this.worker.port.postMessage('pause')
+    this.worker?.port.postMessage('pause')
   }
 
   /**
@@ -108,12 +108,12 @@ export class AudioRecorder {
 
     if (this.state === 'processing') {
       log('warn', 'audio recorder: already processing, resume is unnecessary')
-      this.worker.port.postMessage('resume')
+      this.worker?.port.postMessage('resume')
       return
     }
 
     this.state = 'processing'
-    this.worker.port.postMessage('resume')
+    this.worker?.port.postMessage('resume')
   }
 
   /**
@@ -129,9 +129,9 @@ export class AudioRecorder {
    * destroy audio recorder instance
    */
   public stop(): void {
-    this.worker.port.postMessage('stop')
-    this.worker.disconnect()
-    this.audioContext.close()
+    this.worker?.port.postMessage('stop')
+    this.worker?.disconnect()
+    this.audioContext?.close()
     this.streamSources = []
   }
 
@@ -151,7 +151,9 @@ export class AudioRecorder {
     }
 
     const stream = new MediaStream(audioTracks)
-    const audioInput = this.audioContext.createMediaStreamSource(stream)
-    audioInput.connect(this.worker)
+    const audioInput = this.audioContext?.createMediaStreamSource(stream)
+    if (this.worker) {
+      audioInput?.connect(this.worker)
+    }
   }
 }

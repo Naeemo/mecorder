@@ -6,6 +6,7 @@
     "noImplicitThis": true,
     "alwaysStrict": true,
     "types": ["vite/client"],
+    "target": "ESNext",
     "lib": ["ESNext", "dom"]
   },
   "include": [

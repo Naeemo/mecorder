@@ -11,7 +11,7 @@ Record multiple [MediaStream](https://developer.mozilla.org/en-US/docs/Web/API/M
 ## Usage
 
 ```shell
-yarn add mecorder
+pnpm add mecorder
 ```
 
 ## Documents
